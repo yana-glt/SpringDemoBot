@@ -3,6 +3,7 @@ package com.bot.SpringDemoBot.service;
 import com.bot.SpringDemoBot.config.BotConfig;
 import com.bot.SpringDemoBot.model.User;
 import com.bot.SpringDemoBot.model.UserRepository;
+import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,8 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -29,7 +32,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             "You can execute commands from the main menu on the left or by typing a command:\n\n"+
             "Type /start to see welcome message\n\n"+
             "Type /mydata to see data stored about yourself\n\n"+
-            "Type /help to see this message again";
+            "Type /deletedate to delete stored about yourself\n\n"+
+            "Type /help to see this message again\n\n"+
+            "Type /settings to change settings";
 
     public TelegramBot(BotConfig config){
         this.config=config;
@@ -98,7 +103,9 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void startCommandReceived(long chatId, String name){
-        String answer = "Hi "+name+", nice to meet you!";
+
+        String answer = EmojiParser.parseToUnicode("Hi "+name+", nice to meet you!"+" :blush:");
+        //String answer = "Hi "+name+", nice to meet you!";
         sendMessage(chatId, answer);
         log.info("Replied to user "+name);
 
@@ -107,6 +114,23 @@ public class TelegramBot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
+
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row = new KeyboardRow();
+        row.add("weather");
+        row.add("get random joke");
+        keyboardRows.add(row);
+
+        row = new KeyboardRow();
+        row.add("register");
+        row.add("check my data");
+        row.add("delete my data");
+        keyboardRows.add(row);
+
+        keyboardMarkup.setKeyboard(keyboardRows);
+
+        message.setReplyMarkup(keyboardMarkup);
 
         try{
             execute(message);
